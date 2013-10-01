@@ -28,12 +28,8 @@ function SmartRepeater(startupTime, config, emitter){
 	for (var i = 0; i < this.config.hosts.length; i++) {
 		var host = this.config.hosts[i];
 		this.hostinfo.push({
-			config: host // ,
-			// errors: 0,
-			// flushes: 0,
-			// bytesSent: 0,
-			// statsSent: 0,
-			// packetsSent: 0
+			config: host,
+			errors: 0
 		});
 	}
 
@@ -88,9 +84,13 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 	return outgoing;
 };
 
-SmartRepeater.prototype.sendToHost = function(host, data) {
+SmartRepeater.prototype.sendToHost = function(host, metrics) {
 	var self = this;
 	var i;
+
+	var data = this.splitStats([
+		this.prefix + "statsd-smart-repeater.errors:" + host.errors + "|g",
+	]).concat(metrics);
 
 	try {
 		if (host.config.protocol == "udp4" || host.config.protocol == "udp6") {
@@ -111,10 +111,14 @@ SmartRepeater.prototype.sendToHost = function(host, data) {
 				if (debug) {
 					l.log(connectionException);
 				}
+				host.errors++;
 			});
 			connection.on('connect', function() {
 				for (i = 0; i < data.length; i++) {
 					var single = data[i];
+					if (i != 0) {
+						this.write("\n");
+					}
 					this.write(single);
 				}
 				this.end();
@@ -125,11 +129,11 @@ SmartRepeater.prototype.sendToHost = function(host, data) {
 		if (debug) {
 			l.log(e);
 		}
+		host.errors++;
 	}
 };
 
 SmartRepeater.prototype.splitStats = function(stats) {
-	var self = this;
 	var i;
 
 	var buffers = [];
@@ -163,7 +167,6 @@ SmartRepeater.prototype.splitStats = function(stats) {
 }
 
 SmartRepeater.prototype.distribute = function(reconstituted) {
-	var self = this;
 	var i;
 
 	var lines = this.splitStats(reconstituted);
@@ -175,12 +178,7 @@ SmartRepeater.prototype.distribute = function(reconstituted) {
 };
 
 SmartRepeater.prototype.process = function(time_stamp, metrics) {
-	var self = this;
-
-	var processStart = Date.now();
-	var reconstituted = this.reconstituteMessages(metrics);
-	this.distribute(reconstituted);
-	var processEnd = Date.now();
+	this.distribute(this.reconstituteMessages(metrics));
 };
 
 exports.init = function(startupTime, config, events) {
