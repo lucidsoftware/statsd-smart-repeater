@@ -29,7 +29,9 @@ function SmartRepeater(startupTime, config, emitter){
 		var host = this.config.hosts[i];
 		this.hostinfo.push({
 			config: host,
-			errors: 0
+			errors: 0,
+			flushTime: 0,
+			flushes: 0,
 		});
 	}
 
@@ -85,11 +87,14 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 };
 
 SmartRepeater.prototype.sendToHost = function(host, metrics) {
-	var self = this;
 	var i;
+
+	var starttime = Date.now();
 
 	var data = this.splitStats([
 		this.prefix + "statsd-smart-repeater.errors:" + host.errors + "|g",
+		this.prefix + "statsd-smart-repeater.flushTime:" + host.flushTime + "|g",
+		this.prefix + "statsd-smart-repeater.flushes:" + host.flushes + "|g",
 	]).concat(metrics);
 
 	try {
@@ -131,6 +136,9 @@ SmartRepeater.prototype.sendToHost = function(host, metrics) {
 		}
 		host.errors++;
 	}
+
+	host.flushTime = (Date.now() - starttime);
+	host.flushes++;
 };
 
 SmartRepeater.prototype.splitStats = function(stats) {
