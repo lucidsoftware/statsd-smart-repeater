@@ -1,6 +1,3 @@
-// NEED config reload
-// NEED stats
-
 /*
  * Flush stats to a downstream statsd server.
  *
@@ -31,12 +28,12 @@ function SmartRepeater(startupTime, config, emitter){
 	for (var i = 0; i < this.config.hosts.length; i++) {
 		var host = this.config.hosts[i];
 		this.hostinfo.push({
-			config: host,
-			errors: 0,
-			flushes: 0,
-			bytesSent: 0,
-			statsSent: 0,
-			packetsSent: 0
+			config: host // ,
+			// errors: 0,
+			// flushes: 0,
+			// bytesSent: 0,
+			// statsSent: 0,
+			// packetsSent: 0
 		});
 	}
 
@@ -101,7 +98,6 @@ SmartRepeater.prototype.sendToHost = function(host, data) {
 			for (i = 0; i < data.length; i++) {
 				var single = data[i];
 				var buffer = new Buffer(single);
-				console.log("Sending", single, host.config);
 				sock.send(buffer, 0, single.length, host.config.port, host.config.hostname, function(err, bytes) {
 					if (err && debug) {
 						l.log(err);
@@ -132,7 +128,7 @@ SmartRepeater.prototype.sendToHost = function(host, data) {
 	}
 };
 
-SmartRepeater.prototype.distribute = function(reconstituted) {
+SmartRepeater.prototype.splitStats = function(stats) {
 	var self = this;
 	var i;
 
@@ -140,8 +136,8 @@ SmartRepeater.prototype.distribute = function(reconstituted) {
 	var buffer = [];
 	var bufferLength = 0;
 
-	for (i = 0; i < reconstituted.length; i++) {
-		var line = reconstituted[i];
+	for (i = 0; i < stats.length; i++) {
+		var line = stats[i];
 		var lineLength = line.length;
 
 		if (bufferLength != 0 && (bufferLength + lineLength) > this.config.batchSize) {
@@ -162,6 +158,15 @@ SmartRepeater.prototype.distribute = function(reconstituted) {
 	for (i = 0; i < buffers.length; i++) {
 		lines.push(buffers[i].join("\n"));
 	}
+
+	return lines;
+}
+
+SmartRepeater.prototype.distribute = function(reconstituted) {
+	var self = this;
+	var i;
+
+	var lines = this.splitStats(reconstituted);
 
 	for (i = 0; i < this.hostinfo.length; i++) {
 		var host = this.hostinfo[i];
