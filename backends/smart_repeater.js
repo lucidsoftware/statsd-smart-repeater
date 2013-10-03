@@ -41,7 +41,7 @@ function SmartRepeater(startupTime, config, emitter){
 };
 
 SmartRepeater.prototype.prefixedKey = function(key) {
-	if (!this.checkExistingPrefix && key.indexOf(this.prefix) === 0) {
+	if (this.checkExistingPrefix && key.indexOf(this.prefix) === 0) {
 		return key;
 	}
 
