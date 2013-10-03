@@ -77,7 +77,7 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 	}
 
 	for (key in metrics.sets) {
-		var values = metrics.sets[key].values;
+		var values = metrics.sets[key].values();
 		for (i = 0; i < values.length; i++) {
 			outgoing.push(this.prefix + key + ":" + values[i] + "|s");
 		}
