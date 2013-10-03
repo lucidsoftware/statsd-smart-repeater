@@ -16,6 +16,7 @@ Optional Variables:
 		prefix:               stat prefix (prepended to all outgoing stats)
 		checkExistingPrefix:  true to not prepend the prefix if it's already there
 		batchSize:            max message size to send downstream
+		blacklist:            array of regexes for blacklisting metrics
 
 */
 
@@ -31,6 +32,9 @@ Optional Variables:
 		hosts: [
 			{ hostname: 'localhost', port: 8125, protocol: 'tcp6' },
 			{ hostname: '127.0.0.1', port: 8127, protocol: 'udp4' }
+		],
+		blacklist: [
+			/^statsd/
 		]
 	}
 }

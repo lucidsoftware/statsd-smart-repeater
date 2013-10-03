@@ -24,6 +24,7 @@ function SmartRepeater(startupTime, config, emitter){
 	this.prefix = (this.prefix.length == 0) ? "" : (this.prefix + ".");
 	this.checkExistingPrefix = this.config.checkExistingPrefix || false;
 	this.batchSize = this.config.batchSize || 1024;
+	this.blacklist = this.config.blacklist || [];
 
 	this.hostinfo = [];
 	for (var i = 0; i < this.config.hosts.length; i++) {
@@ -45,6 +46,18 @@ SmartRepeater.prototype.prefixedKey = function(key) {
 	}
 
 	return this.prefix + key;
+}
+
+SmartRepeater.prototype.blacklisted = function(key) {
+	var i;
+
+	for (i = 0; i < this.blacklist.length; i++) {
+		if (this.blacklist[i].test(key)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 SmartRepeater.prototype.sampleRateToString = function(number) {
@@ -69,14 +82,17 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 	var outgoing = [];
 
 	for (key in metrics.gauges) {
+		if (this.blacklisted(key)) { continue; }
 		outgoing.push(this.prefixedKey(key) + ":" + metrics.gauges[key] + "|g");
 	}
 
 	for (key in metrics.counters) {
+		if (this.blacklisted(key)) { continue; }
 		outgoing.push(this.prefixedKey(key) + ":" + metrics.counters[key] + "|c");
 	}
 
 	for (key in metrics.timers) {
+		if (this.blacklisted(key)) { continue; }
 		var values = metrics.timers[key];
 		var sampleRate = values.length / metrics.timer_counters[key];
 		var sampleRateString = (sampleRate >= 1) ? "" : ("|@" + this.sampleRateToString(sampleRate));
@@ -90,6 +106,7 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 	}
 
 	for (key in metrics.sets) {
+		if (this.blacklisted(key)) { continue; }
 		var values = metrics.sets[key].values();
 
 		var rebuiltValues = [];
