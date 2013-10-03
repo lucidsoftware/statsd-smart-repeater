@@ -71,16 +71,24 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 		var values = metrics.timers[key];
 		var sampleRate = values.length / metrics.timer_counters[key];
 		var sampleRateString = (sampleRate >= 1) ? "" : ("|@" + this.sampleRateToString(sampleRate));
+
+		var rebuiltValues = [];
 		for (i = 0; i < values.length; i++) {
-			outgoing.push(this.prefix + key + ":" + values[i] + "|ms" + sampleRateString);
+			rebuiltValues.push(values[i] + "|ms" + sampleRateString);
 		}
+
+		outgoing.push(this.prefix + key + ":" + rebuiltValues.join(":"));
 	}
 
 	for (key in metrics.sets) {
 		var values = metrics.sets[key].values();
+
+		var rebuiltValues = [];
 		for (i = 0; i < values.length; i++) {
-			outgoing.push(this.prefix + key + ":" + values[i] + "|s");
+			rebuiltValues.push(values[i] + "|s");
 		}
+
+		outgoing.push(this.prefix + key + ":" + rebuiltValues.join(":"));
 	}
 
 	return outgoing;
