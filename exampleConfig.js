@@ -14,6 +14,7 @@ Optional Variables:
 
 	smartRepeater:
 		prefix:               stat prefix (prepended to all outgoing stats)
+		checkExistingPrefix:  true to not prepend the prefix if it's already there
 		batchSize:            max message size to send downstream
 
 */
@@ -25,6 +26,7 @@ Optional Variables:
 
 	smartRepeater: {
 		prefix: '',
+		checkExistingPrefix: false,
 		batchSize: 1024,
 		hosts: [
 			{ hostname: 'localhost', port: 8125, protocol: 'tcp6' },

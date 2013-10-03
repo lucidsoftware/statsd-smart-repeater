@@ -22,6 +22,7 @@ function SmartRepeater(startupTime, config, emitter){
 
 	this.prefix = this.config.prefix || '';
 	this.prefix = (this.prefix.length == 0) ? "" : (this.prefix + ".");
+	this.checkExistingPrefix = this.config.checkExistingPrefix || false;
 	this.batchSize = this.config.batchSize || 1024;
 
 	this.hostinfo = [];
@@ -37,6 +38,14 @@ function SmartRepeater(startupTime, config, emitter){
 
 	emitter.on('flush', function(time_stamp, metrics) { self.process(time_stamp, metrics); });
 };
+
+SmartRepeater.prototype.prefixedKey = function(key) {
+	if (!this.this.checkExistingPrefix && key.indexOf(this.prefix) === 0) {
+		return key;
+	}
+
+	return this.prefix + key;
+}
 
 SmartRepeater.prototype.sampleRateToString = function(number) {
 	var string = number.toFixed(3);
@@ -60,11 +69,11 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 	var outgoing = [];
 
 	for (key in metrics.gauges) {
-		outgoing.push(this.prefix + key + ":" + metrics.gauges[key] + "|g");
+		outgoing.push(this.prefixedKey(key) + ":" + metrics.gauges[key] + "|g");
 	}
 
 	for (key in metrics.counters) {
-		outgoing.push(this.prefix + key + ":" + metrics.counters[key] + "|c");
+		outgoing.push(this.prefixedKey(key) + ":" + metrics.counters[key] + "|c");
 	}
 
 	for (key in metrics.timers) {
@@ -77,7 +86,7 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 			rebuiltValues.push(values[i] + "|ms" + sampleRateString);
 		}
 
-		outgoing.push(this.prefix + key + ":" + rebuiltValues.join(":"));
+		outgoing.push(this.prefixedKey(key) + ":" + rebuiltValues.join(":"));
 	}
 
 	for (key in metrics.sets) {
@@ -88,7 +97,7 @@ SmartRepeater.prototype.reconstituteMessages = function(metrics) {
 			rebuiltValues.push(values[i] + "|s");
 		}
 
-		outgoing.push(this.prefix + key + ":" + rebuiltValues.join(":"));
+		outgoing.push(this.prefixedKey(key) + ":" + rebuiltValues.join(":"));
 	}
 
 	return outgoing;
