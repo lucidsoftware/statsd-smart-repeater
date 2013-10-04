@@ -3,8 +3,6 @@
 Required Variables:
 
 	smartRepeater:
-		prefix:               stat prefix (prepended to all outgoing stats)
-		batchSize:            max message size to send downstream
 		hosts:                array of host data to repeat information to
 			hostname:         hostname or ip address
 			port:             TCP port
