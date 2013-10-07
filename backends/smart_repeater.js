@@ -157,12 +157,21 @@ SmartRepeater.prototype.sendToHost = function(host, metrics) {
 		}
 		else {
 			var sock = net.createConnection(host.config.port, host.config.hostname);
+			sock.setEncoding('utf8');
+			sock.setKeepAlive(false);
+			sock.setTimeout(5000, function() {
+				if (debug) {
+					l.log("Socket timed out");
+				}
+				host.errors++;
+				sock.end();
+			});
 			sock.addListener('error', function(connectionException) {
 				if (debug) {
 					l.log(connectionException);
 				}
 				host.errors++;
-				sock.close();
+				sock.end();
 			});
 			sock.on('connect', function() {
 				try {
