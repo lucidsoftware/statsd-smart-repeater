@@ -134,33 +134,55 @@ SmartRepeater.prototype.sendToHost = function(host, metrics) {
 	try {
 		if (host.config.protocol == "udp4" || host.config.protocol == "udp6") {
 			var sock = dgram.createSocket(host.config.protocol);
-			for (i = 0; i < data.length; i++) {
-				var single = data[i];
-				var buffer = new Buffer(single);
-				sock.send(buffer, 0, single.length, host.config.port, host.config.hostname, function(err, bytes) {
-					if (err && debug) {
-						l.log(err);
-					}
-				});
+			try {
+				for (i = 0; i < data.length; i++) {
+					var single = data[i];
+					var buffer = new Buffer(single);
+					sock.send(buffer, 0, single.length, host.config.port, host.config.hostname, function(err, bytes) {
+						if (err && debug) {
+							l.log(err);
+						}
+					});
+				}
+			}
+			catch(e) {
+				if (debug) {
+					l.log(e);
+					host.errors++;
+				}
+			}
+			finally {
+				sock.close();
 			}
 		}
 		else {
-			var connection = net.createConnection(host.config.port, host.config.hostname);
-			connection.addListener('error', function(connectionException) {
+			var sock = net.createConnection(host.config.port, host.config.hostname);
+			sock.addListener('error', function(connectionException) {
 				if (debug) {
 					l.log(connectionException);
 				}
 				host.errors++;
+				sock.close();
 			});
-			connection.on('connect', function() {
-				for (i = 0; i < data.length; i++) {
-					var single = data[i];
-					if (i != 0) {
-						this.write("\n");
+			sock.on('connect', function() {
+				try {
+					for (i = 0; i < data.length; i++) {
+						var single = data[i];
+						if (i != 0) {
+							sock.write("\n");
+						}
+						sock.write(single);
 					}
-					this.write(single);
 				}
-				this.end();
+				catch(e) {
+					if (debug) {
+						l.log(e);
+					}
+					host.errors++;
+				}
+				finally {
+					sock.end();
+				}
 			});
 		}
 	}
