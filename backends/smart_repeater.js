@@ -133,14 +133,20 @@ SmartRepeater.prototype.sendToHost = function(host, metrics) {
 
 	try {
 		if (host.config.protocol == "udp4" || host.config.protocol == "udp6") {
+			var sent = 0;
 			var sock = dgram.createSocket(host.config.protocol);
 			try {
 				for (i = 0; i < data.length; i++) {
 					var single = data[i];
 					var buffer = new Buffer(single);
 					sock.send(buffer, 0, single.length, host.config.port, host.config.hostname, function(err, bytes) {
+						sent++;
 						if (err && debug) {
 							l.log(err);
+						}
+
+						if (sent == data.length) {
+							sock.close();
 						}
 					});
 				}
@@ -150,9 +156,6 @@ SmartRepeater.prototype.sendToHost = function(host, metrics) {
 					l.log(e);
 					host.errors++;
 				}
-			}
-			finally {
-				sock.close();
 			}
 		}
 		else {
