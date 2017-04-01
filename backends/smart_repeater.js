@@ -220,7 +220,7 @@ SmartRepeater.prototype.splitStats = function(stats) {
 		var line = stats[i];
 		var lineLength = line.length;
 
-		if (bufferLength != 0 && (bufferLength + lineLength) > this.config.batchSize) {
+		if (bufferLength != 0 && (bufferLength + lineLength) > this.batchSize) {
 			buffers.push(buffer);
 			buffer = [];
 			bufferLength = 0;
