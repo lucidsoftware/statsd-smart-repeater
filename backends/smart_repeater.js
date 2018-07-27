@@ -179,10 +179,7 @@ SmartRepeater.prototype.sendToHost = function(host, metrics) {
 			sock.on('connect', function() {
 				try {
 					for (i = 0; i < data.length; i++) {
-						var single = data[i];
-						if (i != 0) {
-							sock.write("\n");
-						}
+						var single = data[i] + "\n";
 						sock.write(single);
 					}
 				}
